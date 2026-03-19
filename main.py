@@ -25,13 +25,33 @@ def get_edges(img: MatLike) -> MatLike:
     return edges
 
 
+def get_points_approx(img: MatLike) -> tuple[MatLike, list]:
+    new_img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    point_list = []
+
+    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    for contour in contours:
+        perimeter = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.0005 * perimeter, True)
+
+        cv2.polylines(new_img, [approx], True, (0, 255, 0), 2)
+
+        for point in approx:
+            x, y = point[0]
+            cv2.circle(new_img, (x, y), 5, (0, 0, 255), -1)
+            point_list.append((int(x), int(y)))
+    
+    return new_img, point_list
+
 def process_img():
     img: MatLike | None = cv2.imread("test-images\\1.png")
     if img is not None:
         quant = color_quantize(img, k=16)
         edges = get_edges(quant)
+        result, approx_points = get_points_approx(edges)
+        print(approx_points)
 
-        cv2.imshow("edges detected", edges)
+        cv2.imshow("Processed Image", result)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     else:
