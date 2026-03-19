@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import numpy.typing as npt
 from cv2.typing import MatLike
 
 
