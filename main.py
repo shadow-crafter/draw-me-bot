@@ -29,7 +29,7 @@ def get_points_approx(img: MatLike) -> tuple[MatLike, list]:
     new_img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     point_list = []
 
-    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         perimeter = cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, 0.0005 * perimeter, True)
@@ -49,7 +49,7 @@ def process_img():
         quant = color_quantize(img, k=16)
         edges = get_edges(quant)
         result, approx_points = get_points_approx(edges)
-        print(approx_points)
+        print(f"Found {len(approx_points)} points!")
 
         cv2.imshow("Processed Image", result)
         cv2.waitKey(0)
