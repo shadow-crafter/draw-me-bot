@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 from cv2.typing import MatLike
+import keyboard
+import pyautogui
 
 
 def color_quantize(img: MatLike, k: int) -> MatLike:
@@ -29,10 +31,10 @@ def get_points_approx(img: MatLike) -> tuple[MatLike, list]:
     new_img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     point_list = []
 
-    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         perimeter = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.0005 * perimeter, True)
+        approx = cv2.approxPolyDP(contour, 0.005 * perimeter, True)
 
         cv2.polylines(new_img, [approx], True, (0, 255, 0), 2)
 
@@ -54,6 +56,13 @@ def process_img():
         cv2.imshow("Processed Image", result)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+        for i, point in enumerate(approx_points):
+            if keyboard.is_pressed('q'):
+                break
+            pyautogui.dragTo(point[0], point[1], button="left")
+            print(f"Point {i}")
+            print(f"Time estimate: {0.1 * (len(approx_points) - i)}")
     else:
         print("Could not load image!")
 
