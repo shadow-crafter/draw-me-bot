@@ -146,13 +146,21 @@ def nearest_neighbor_pathfind_segments(points: NDArray, segment_threshold: float
             break
         
         if not found_next:
-            break
+            #save current segment and find the nearest unvisited point to start a new segment
+            if current_segment:
+                all_segments.append(np.array(current_segment))
+            
+            if unvisited:
+                nearest_unvisited = min(unvisited, key=lambda idx: np.linalg.norm(points[idx] - points[curr_i]))
+                curr_i = nearest_unvisited
+                current_segment = [points[curr_i]]
+                unvisited.remove(curr_i)
 
     if current_segment:
         all_segments.append(np.array(current_segment))
     
 
-    return [segment for segment in all_segments if len(segment) >= min_segment_size] #gets rid of noise. like tiny segments are probably not worth drawing
+    return [segment for segment in all_segments if len(segment) >= min_segment_size] #gets rid of noise. tiny segments are probably not worth drawing
 
 
 def process_img():
