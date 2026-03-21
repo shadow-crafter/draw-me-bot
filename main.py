@@ -183,7 +183,7 @@ def process_img():
 
         result, approx_points = get_points_approx(edges)
         sorted_segments = nearest_neighbor_pathfind_segments(approx_points)
-        print(f"Found {len(approx_points)} points, {len(sorted_segments)} segments!")
+        print(f"Found {len(approx_points)} points originally, {sum(map(len, sorted_segments))} points sorted, and {len(sorted_segments)} segments!")
 
         #show processed image
         traced_image = draw_sorted_segments(img, sorted_segments, draw_numbers=True)
