@@ -79,7 +79,8 @@ def get_edges(img: MatLike) -> MatLike:
 
     #consider HED or BDCN (?) edge detection
     gray: MatLike = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (5,5), 0)
+    #gray = cv2.GaussianBlur(gray, (5,5), 0)
+    gray = cv2.bilateralFilter(gray, 7, 50, 50)
 
     #this method gets outer edges well
     hist = cv2.equalizeHist(gray)
@@ -87,7 +88,6 @@ def get_edges(img: MatLike) -> MatLike:
 
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
     clahe_applied = clahe.apply(gray)
-    #gray = cv2.bilateralFilter(gray, 7, 50, 50)
     edges_inner = cv2.Canny(clahe_applied, 50, 150)
 
     combined_edges = cv2.bitwise_or(edges_outer, edges_inner)
