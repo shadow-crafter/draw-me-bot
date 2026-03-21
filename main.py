@@ -55,27 +55,46 @@ def draw_sorted_segments(img: MatLike, segments: list[NDArray], draw_numbers: bo
     return result
 
 
-def draw_points():
-    pass
+def draw_points(segments: list[NDArray]) -> None:
+    time.sleep(1)
+
+    pydirectinput.moveTo(segments[0][0][0], segments[0][0][1], duration=0.1)
+    pydirectinput.click()
+    for i, segment in enumerate(segments):
+        print(f"Segment {i}")
+        for j, point in enumerate(segment):
+            if keyboard.is_pressed('q'):
+                return
+            print(f"Point {j}: {point}")
+            if j == 0:
+                pydirectinput.mouseUp(button="left")
+                pydirectinput.moveTo(point[0], point[1], duration=0.1)
+                pydirectinput.mouseDown(button="left")
+            pydirectinput.moveTo(point[0], point[1], duration=0.15)
+        pydirectinput.mouseUp(button="left")
+    
 
 def get_edges(img: MatLike) -> MatLike:
     print("Getting edges in image...")
 
+    #consider HED or BDCN (?) edge detection
     gray: MatLike = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.equalizeHist(gray)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    gray = clahe.apply(gray)
-    gray: MatLike = cv2.GaussianBlur(gray, (5,5), 1.4)
+    gray = cv2.GaussianBlur(gray, (5,5), 0)
 
-    v = np.median(gray)
-    lower = int(max(0, 0.5 * v))
-    upper = int(min(255, 1.2 * v))
-    edges = cv2.Canny(gray, lower, upper)
-    if cv2.countNonZero(edges) < 100:
-        edges = cv2.Canny(gray, max(0, lower // 2), min(255, upper * 1.4))
+    #this method gets outer edges well
+    hist = cv2.equalizeHist(gray)
+    edges_outer = cv2.Canny(hist, 100, 200)
 
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+    clahe_applied = clahe.apply(gray)
+    #gray = cv2.bilateralFilter(gray, 7, 50, 50)
+    edges_inner = cv2.Canny(clahe_applied, 50, 150)
+
+    combined_edges = cv2.bitwise_or(edges_outer, edges_inner)
+
+    #kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
     kernel = np.ones((3, 3), np.uint8)
-    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+    edges = cv2.morphologyEx(combined_edges, cv2.MORPH_CLOSE, kernel)
 
     return edges
 
@@ -113,7 +132,7 @@ def get_points_approx(img: MatLike) -> tuple[MatLike, NDArray]:
     return new_img, point_list
 
 
-def nearest_neighbor_pathfind_segments(points: NDArray, segment_threshold: float = 50.0, min_segment_size=3) -> list[NDArray]:
+def nearest_neighbor_pathfind_segments(points: NDArray, segment_threshold: float = 25.0, min_segment_size=1) -> list[NDArray]:
     print("Sorting points...")
 
     tree = KDTree(points)
@@ -164,7 +183,7 @@ def nearest_neighbor_pathfind_segments(points: NDArray, segment_threshold: float
 
 
 def process_img():
-    img: MatLike | None = cv2.imread("test-images\\1.png")
+    img: MatLike | None = cv2.imread("test-images\\3.png")
     if img is not None:
         edges: MatLike = None
         try:
@@ -193,18 +212,8 @@ def process_img():
         cv2.imshow("Processed Images", combined)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        return
-        time.sleep(1)
 
-        pydirectinput.click()
-        pydirectinput.mouseDown(button="left")
-        for i, point in enumerate(sorted_points):
-            if keyboard.is_pressed('q'):
-                break
-            pydirectinput.moveTo(point[0], point[1], duration=0.25 + (random.randrange(1, 20) / 100))
-            print(f"Point {i}")
-        
-        pydirectinput.mouseUp(button="left")
+        draw_points(sorted_segments)
     else:
         print("Could not load image!")
 
