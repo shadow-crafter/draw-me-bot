@@ -4,6 +4,7 @@ import pydirectinput
 import time
 import tkinter as tk
 
+
 class AreaSelector:
     def __init__(self):
         self.root = tk.Tk()
