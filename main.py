@@ -6,6 +6,11 @@ from src.pathfinding import nearest_neighbor_pathfind_segments
 
 
 def process_img():
+    selector = drawing.AreaSelector()
+    region = selector.get_selection()
+    if region:
+        print(region)
+    
     img: MatLike | None = cv2.imread("test-images\\3.png")
     if img is not None:
         edges: MatLike = None
