@@ -59,3 +59,14 @@ def nearest_neighbor_pathfind_segments(points: NDArray, segment_threshold: float
     
 
     return [segment for segment in all_segments if len(segment) >= min_segment_size] #gets rid of noise. tiny segments are probably not worth drawing
+
+
+def offset_points_in_segments(segments: list[NDArray], offset: tuple) -> NDArray:
+    offset_segments: list[NDArray] = []
+    for segment in segments:
+        new_segment = []
+        for point in segment:
+            new_segment.append((point[0] + offset[0], point[1] + offset[1]))
+        offset_segments.append(np.array(new_segment))
+    
+    return offset_segments
