@@ -48,8 +48,12 @@ def process_img():
         cv2.imshow("Processed Images", combined)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
-        drawing.draw_points(sorted_segments)
+        
+        height, width = img.shape[:2]
+        visualizer = drawing.DrawVisualizer((width, height), sorted_segments)
+        corner_pos = visualizer.get_corner_pos()
+        print(f"Corner pos: {corner_pos}")
+        #drawing.draw_points(sorted_segments)
     else:
         print("Could not load image!")
 
