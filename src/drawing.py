@@ -134,7 +134,7 @@ class DrawVisualizer:
 
 
 def draw_points(segments: list[NDArray]) -> None:
-    time.sleep(1)
+    input("Press enter to start drawing. Hold 'q' during the drawing process to cancel at any time.")
 
     pydirectinput.moveTo(segments[0][0][0], segments[0][0][1], duration=0.1)
     pydirectinput.click()
