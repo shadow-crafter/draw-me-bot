@@ -13,7 +13,10 @@ def get_base_image() -> MatLike | None:
     img : MatLike | None = None
     Path("logs/").mkdir(parents=True, exist_ok=True)
     try:
-        reuse = int(input("Would you like to use the previous screenshot (1) or take a new one (2)? : "))
+        reuse = 2 # assume 2 if there is not already a screenshot in logs
+        if Path("logs/region_screenshot.png").exists():
+            reuse = int(input("Would you like to use the previous screenshot (1) or take a new one (2)? : "))
+        
         if reuse == 1:
             img = cv2.imread("logs/region_screenshot.png")
         elif reuse == 2:
@@ -58,7 +61,6 @@ def draw_points(img: MatLike, sorted_segments: list[NDArray]):
 
 
 def process_img(img: MatLike) -> MatLike | None:
-    # get edges. determine mode for which form since some images process better in different mode
     edges: MatLike | None = None
     try:
         mode = int(input("What mode (1 = smoothed, 2 = quantized, 3 = raw)? : "))
@@ -87,10 +89,15 @@ def main():
     
     edges: MatLike | None = process_img(img)
     if edges is None:
+        print("Could not process image.")
         return
 
     # get point data from edges
     result, approx_points = image_processing.get_points_approx(edges)
+    if len(approx_points) <= 5:
+        print("Not enough points found in image.")
+        return
+    
     sorted_segments: list[NDArray] = nearest_neighbor_pathfind_segments(approx_points)
     print(f"Found {len(approx_points)} points originally, {sum(map(len, sorted_segments))} points sorted, and {len(sorted_segments)} segments!")
     
