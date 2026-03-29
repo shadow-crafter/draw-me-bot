@@ -37,6 +37,27 @@ def get_base_image() -> MatLike | None:
     return img
 
 
+def process_img(img: MatLike) -> MatLike | None:
+    edges: MatLike | None = None
+    try:
+        mode = int(input("What mode (1 = smoothed, 2 = quantized, 3 = raw)? : "))
+        if mode == 1:
+            smoothed = cv2.pyrMeanShiftFiltering(img, sp=16, sr=32)
+            edges = image_processing.get_edges(smoothed)
+        elif mode == 2:
+            quant = image_processing.color_quantize(img, k=13)
+            edges = image_processing.get_edges(quant)
+        elif mode == 3:
+            edges = image_processing.get_edges(img)
+        else:
+            raise ValueError(f"Invalid mode provided. Expected 1, 2, or 3, got: {mode}")
+    except Exception as e:
+        print(f"Trouble processing image: {e}")
+        return
+    
+    return edges
+
+
 def show_processed_img(img: MatLike, result: MatLike, sorted_segments: list[NDArray]):
     traced_image = image_processing.draw_sorted_segments(img, sorted_segments, draw_numbers=True)
     combined = cv2.hconcat([img, result, traced_image])
@@ -57,28 +78,9 @@ def draw_points(img: MatLike, sorted_segments: list[NDArray]):
         print("Could not get corner position.")
         return
     offset_segments = offset_points_in_segments(sorted_segments, corner_pos)
-    drawing.draw_points(offset_segments)
 
-
-def process_img(img: MatLike) -> MatLike | None:
-    edges: MatLike | None = None
-    try:
-        mode = int(input("What mode (1 = smoothed, 2 = quantized, 3 = raw)? : "))
-        if mode == 1:
-            smoothed = cv2.pyrMeanShiftFiltering(img, sp=16, sr=32)
-            edges = image_processing.get_edges(smoothed)
-        elif mode == 2:
-            quant = image_processing.color_quantize(img, k=13)
-            edges = image_processing.get_edges(quant)
-        elif mode == 3:
-            edges = image_processing.get_edges(img)
-        else:
-            raise ValueError(f"Invalid mode provided. Expected 1, 2, or 3, got: {mode}")
-    except Exception as e:
-        print(f"Trouble processing image: {e}")
-        return
-    
-    return edges
+    delay: bool = True if input("Add delay to draw input (Y or N): ").lower() == 'y' else False
+    drawing.draw_points(offset_segments, delay)
 
 
 def main():
