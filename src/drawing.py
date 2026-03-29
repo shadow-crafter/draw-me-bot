@@ -1,7 +1,7 @@
 import keyboard
 from numpy.typing import NDArray
 import pydirectinput
-import time
+import random
 import tkinter as tk
 
 
@@ -27,13 +27,14 @@ class AreaSelector:
         self.root.bind("<Escape>", lambda _: self.root.destroy())
         self.root.bind("<Return>", lambda _: self.root.destroy())
 
-        self.canvas.focus_set()
         self.canvas.create_text(
             self.root.winfo_screenwidth() / 2,
             self.root.winfo_screenheight() / 2,
             text="Click and drag to select area",
             font=("Arial", 16, "bold"),
         )
+
+        self.canvas.focus_set()
 
     def on_button_press(self, event):
         self.canvas.delete("all")
@@ -100,13 +101,14 @@ class DrawVisualizer:
         self.root.bind("<Escape>", lambda _: self.root.destroy())
         self.root.bind("<Return>", lambda _: self.root.destroy())
 
-        self.canvas.focus_set()
         self.canvas.create_text(
             self.root.winfo_screenwidth() / 2,
             self.root.winfo_screenheight() / 2,
             text="Click to choose the top-left corner to draw from",
             font=("Arial", 16, "bold"),
         )
+
+        self.canvas.focus_set()
 
     def on_button_press(self, event):
         self.canvas.delete("all")
@@ -127,26 +129,43 @@ class DrawVisualizer:
             for i, point in enumerate(segment):
                 pos = (point[0] + self.corner_pos[0], point[1] + self.corner_pos[1])
                 self.canvas.create_oval(pos[0] - 1, pos[1] - 1, pos[0] + 1, pos[1] + 1, fill=colors[i % len(colors)])
+        
+        self.canvas.create_text(
+            self.corner_pos[0],
+            self.corner_pos[1],
+            text="Press ESCAPE or RETURN to confirm selection.",
+            font=("Arial", 12, "bold"),
+            anchor="sw",
+        )
 
     def get_corner_pos(self):
         self.root.mainloop()
         return self.corner_pos
 
 
-def draw_points(segments: list[NDArray]) -> None:
-    input("Press enter to start drawing. Hold 'q' during the drawing process to cancel at any time.")
+def draw_points(segments: list[NDArray], delay: bool) -> None:
+    draw_time_est = 0.125 * sum(map(len, segments)) if delay else 0.05 * len(segments)
+    print(f"Estimated draw time: {draw_time_est:.2f} seconds (delay: {delay}). Hold 'q' during the drawing process to cancel at any time.")
+    input("Press enter to start drawing.")
 
+    if not delay:
+        pydirectinput.PAUSE = 0
     pydirectinput.moveTo(segments[0][0][0], segments[0][0][1], duration=0.1)
     pydirectinput.click()
     for i, segment in enumerate(segments):
         print(f"Segment {i}")
-        for j, point in enumerate(segment):
+        for j, (x, y) in enumerate(segment):
             if keyboard.is_pressed("q"):
+                pydirectinput.mouseUp(button="left")
                 return
-            print(f"Point {j}: {point}")
+
+            print(f"Point {j}: ({x}, {y})")
+
             if j == 0:
                 pydirectinput.mouseUp(button="left")
-                pydirectinput.moveTo(point[0], point[1], duration=0.1)
+                pydirectinput.moveTo(x, y)
                 pydirectinput.mouseDown(button="left")
-            pydirectinput.moveTo(point[0], point[1], duration=0.15)
+            else:
+                pydirectinput.moveTo(x, y, duration = 0.05 + (random.random() / 10))
+        
         pydirectinput.mouseUp(button="left")
